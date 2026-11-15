@@ -7,9 +7,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var DbConn *sql.DB
+// dbConn is database connection handler
+var dbConn *sql.DB
 
-// Init creates PostgreSQL database connection before any query
+// Init creates PostgreSQL database handler before any query
 func Init() error {
 	// TODO: replace hard-coded connection link with config
 	dsn := "postgres://test-db-user:test-db-pass@localhost:5432/test-db-user?sslmode=disable"
@@ -29,6 +30,7 @@ func Init() error {
 	return nil
 }
 
+// Close closes database handler instance
 func Close() error {
 	if err := DbConn.Close(); err != nil {
 		log.Fatal(err)

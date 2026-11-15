@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// A response data for the Ping
+// ResponsePing is response data type for Ping
 type ResponsePing struct {
 	Status string `json:"status"`
 }
 
-// Ping is an API handler for a ping request
+// Ping is API handler for ping request
 func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, ResponsePing{"pong"})
 }

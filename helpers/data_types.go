@@ -2,7 +2,7 @@ package helpers
 
 import "fmt"
 
-// Account role type
+// AccountRole is user's account role type
 type AccountRole int
 
 // Enumeration of account role
@@ -14,7 +14,7 @@ const (
 	RoleStudent                          // 4
 )
 
-// Get a string representation of an AccountRole value
+// String returns string representation of AccountRole value
 func (a AccountRole) String() string {
 	switch a {
 	case RoleUnknown:
