@@ -13,7 +13,8 @@ var DbConn *sql.DB
 func Init() error {
 	// TODO: replace hard-coded connection link with config
 	dsn := "postgres://test-db-user:test-db-pass@localhost:5432/test-db-user?sslmode=disable"
-	DbConn, err := sql.Open("pgx", dsn)
+	var err error
+	DbConn, err = sql.Open("pgx", dsn)
 
 	if err != nil {
 		log.Fatal(err)
