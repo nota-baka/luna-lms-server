@@ -15,14 +15,14 @@ func Init() error {
 	// TODO: replace hard-coded connection link with config
 	dsn := "postgres://test-db-user:test-db-pass@localhost:5432/test-db-user?sslmode=disable"
 	var err error
-	DbConn, err = sql.Open("pgx", dsn)
+	dbConn, err = sql.Open("pgx", dsn)
 
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
 
-	if err = DbConn.Ping(); err != nil {
+	if err = dbConn.Ping(); err != nil {
 		log.Fatal(err)
 		return err
 	}
@@ -32,7 +32,7 @@ func Init() error {
 
 // Close closes database handler instance
 func Close() error {
-	if err := DbConn.Close(); err != nil {
+	if err := dbConn.Close(); err != nil {
 		log.Fatal(err)
 		return err
 	}
