@@ -18,12 +18,12 @@ func Init() error {
 	dbConn, err = sql.Open("pgx", dsn)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 
 	if err = dbConn.Ping(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 
@@ -33,7 +33,7 @@ func Init() error {
 // Close closes database handler instance
 func Close() error {
 	if err := dbConn.Close(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	return nil
