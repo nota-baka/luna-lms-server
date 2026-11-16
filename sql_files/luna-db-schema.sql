@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict T6qoljfGsByDjrr8EZTr9ZEJJn6CtTV2sNvWrhGaUoXHNHTLa4f1oxqEOgVKzVH
+\restrict t8a5O8l3KIVxP1rmAnxVoj93zhthH4vJFzm9OO3pMf0sAAmaneZrBHo4iZoxIux
 
--- Dumped from database version 18.6 (Debian 18.6-1.pgdg13+2)
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.7 (Debian 18.7-1.pgdg13+2)
+-- Dumped by pg_dump version 18.7 (Debian 18.7-1.pgdg13+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -84,36 +84,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: account_recovery_codes; Type: TABLE; Schema: public; Owner: test-db-user
---
-
-CREATE TABLE public.account_recovery_codes (
-    code_hash bytea NOT NULL,
-    account_id uuid NOT NULL,
-    used_at timestamp with time zone
-);
-
-
-ALTER TABLE public.account_recovery_codes OWNER TO "test-db-user";
-
---
--- Name: account_totp; Type: TABLE; Schema: public; Owner: test-db-user
---
-
-CREATE TABLE public.account_totp (
-    account_id uuid NOT NULL,
-    name text NOT NULL,
-    secret_enc bytea NOT NULL,
-    last_used_step text,
-    failed_attempts integer,
-    locked_until timestamp with time zone,
-    confirmed boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE public.account_totp OWNER TO "test-db-user";
-
---
 -- Name: accounts; Type: TABLE; Schema: public; Owner: test-db-user
 --
 
@@ -127,6 +97,49 @@ CREATE TABLE public.accounts (
 
 
 ALTER TABLE public.accounts OWNER TO "test-db-user";
+
+--
+-- Name: accounts_recovery_codes; Type: TABLE; Schema: public; Owner: test-db-user
+--
+
+CREATE TABLE public.accounts_recovery_codes (
+    code_hash bytea CONSTRAINT account_recovery_codes_code_hash_not_null NOT NULL,
+    account_id uuid CONSTRAINT account_recovery_codes_account_id_not_null NOT NULL,
+    used_at timestamp with time zone
+);
+
+
+ALTER TABLE public.accounts_recovery_codes OWNER TO "test-db-user";
+
+--
+-- Name: accounts_totp; Type: TABLE; Schema: public; Owner: test-db-user
+--
+
+CREATE TABLE public.accounts_totp (
+    account_id uuid CONSTRAINT account_totp_account_id_not_null NOT NULL,
+    name text CONSTRAINT account_totp_name_not_null NOT NULL,
+    secret_enc bytea CONSTRAINT account_totp_secret_enc_not_null NOT NULL,
+    last_used_step text,
+    failed_attempts integer,
+    locked_until timestamp with time zone,
+    confirmed boolean DEFAULT false CONSTRAINT account_totp_confirmed_not_null NOT NULL
+);
+
+
+ALTER TABLE public.accounts_totp OWNER TO "test-db-user";
+
+--
+-- Name: accounts_totp_attempts; Type: TABLE; Schema: public; Owner: test-db-user
+--
+
+CREATE TABLE public.accounts_totp_attempts (
+    id uuid DEFAULT uuidv7() CONSTRAINT account_totp_attempts_totp_attempt_id_not_null NOT NULL,
+    account_id uuid CONSTRAINT account_totp_attempts_account_id_not_null NOT NULL,
+    expires_at timestamp with time zone DEFAULT (now() + '00:05:00'::interval) NOT NULL
+);
+
+
+ALTER TABLE public.accounts_totp_attempts OWNER TO "test-db-user";
 
 --
 -- Name: courses; Type: TABLE; Schema: public; Owner: test-db-user
@@ -178,7 +191,9 @@ ALTER TABLE public.courses_participants OWNER TO "test-db-user";
 CREATE TABLE public.devices (
     id uuid DEFAULT uuidv7() NOT NULL,
     account_id uuid NOT NULL,
-    last_online_at timestamp with time zone DEFAULT now() NOT NULL
+    last_online_at timestamp with time zone DEFAULT now() NOT NULL,
+    session_token_hash bytea NOT NULL,
+    session_expires_at timestamp with time zone DEFAULT (now() + '00:05:00'::interval) NOT NULL
 );
 
 
@@ -275,19 +290,6 @@ CREATE TABLE public.notifications (
 ALTER TABLE public.notifications OWNER TO "test-db-user";
 
 --
--- Name: session_tokens; Type: TABLE; Schema: public; Owner: test-db-user
---
-
-CREATE TABLE public.session_tokens (
-    token_hash bytea NOT NULL,
-    expires_at timestamp with time zone NOT NULL,
-    device_id uuid NOT NULL
-);
-
-
-ALTER TABLE public.session_tokens OWNER TO "test-db-user";
-
---
 -- Name: tasks; Type: TABLE; Schema: public; Owner: test-db-user
 --
 
@@ -357,26 +359,26 @@ CREATE TABLE public.tasks_sessions (
 ALTER TABLE public.tasks_sessions OWNER TO "test-db-user";
 
 --
--- Name: account_recovery_codes account_recovery_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
+-- Name: accounts_recovery_codes account_recovery_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
-ALTER TABLE ONLY public.account_recovery_codes
+ALTER TABLE ONLY public.accounts_recovery_codes
     ADD CONSTRAINT account_recovery_codes_pkey PRIMARY KEY (code_hash, account_id);
 
 
 --
--- Name: account_totp account_totp_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
+-- Name: accounts_totp account_totp_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
-ALTER TABLE ONLY public.account_totp
+ALTER TABLE ONLY public.accounts_totp
     ADD CONSTRAINT account_totp_pkey PRIMARY KEY (account_id);
 
 
 --
--- Name: account_totp account_totp_secret_enc_key; Type: CONSTRAINT; Schema: public; Owner: test-db-user
+-- Name: accounts_totp account_totp_secret_enc_key; Type: CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
-ALTER TABLE ONLY public.account_totp
+ALTER TABLE ONLY public.accounts_totp
     ADD CONSTRAINT account_totp_secret_enc_key UNIQUE (secret_enc);
 
 
@@ -429,6 +431,14 @@ ALTER TABLE ONLY public.devices
 
 
 --
+-- Name: devices devices_session_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: test-db-user
+--
+
+ALTER TABLE ONLY public.devices
+    ADD CONSTRAINT devices_session_token_hash_key UNIQUE (session_token_hash);
+
+
+--
 -- Name: files_attachments files_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
@@ -469,14 +479,6 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: session_tokens session_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
---
-
-ALTER TABLE ONLY public.session_tokens
-    ADD CONSTRAINT session_tokens_pkey PRIMARY KEY (token_hash);
-
-
---
 -- Name: tasks_answers tasks_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
@@ -509,19 +511,27 @@ ALTER TABLE ONLY public.tasks_sessions
 
 
 --
--- Name: account_recovery_codes account_recovery_codes_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
+-- Name: accounts_recovery_codes account_recovery_codes_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
-ALTER TABLE ONLY public.account_recovery_codes
+ALTER TABLE ONLY public.accounts_recovery_codes
     ADD CONSTRAINT account_recovery_codes_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
--- Name: account_totp account_totp_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
+-- Name: accounts_totp account_totp_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
-ALTER TABLE ONLY public.account_totp
+ALTER TABLE ONLY public.accounts_totp
     ADD CONSTRAINT account_totp_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: accounts_totp_attempts account_totp_attempts_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
+--
+
+ALTER TABLE ONLY public.accounts_totp_attempts
+    ADD CONSTRAINT account_totp_attempts_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -621,14 +631,6 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: session_tokens session_tokens_device_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
---
-
-ALTER TABLE ONLY public.session_tokens
-    ADD CONSTRAINT session_tokens_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id);
-
-
---
 -- Name: tasks_answers tasks_answers_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: test-db-user
 --
 
@@ -672,5 +674,5 @@ ALTER TABLE ONLY public.tasks_sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict T6qoljfGsByDjrr8EZTr9ZEJJn6CtTV2sNvWrhGaUoXHNHTLa4f1oxqEOgVKzVH
+\unrestrict t8a5O8l3KIVxP1rmAnxVoj93zhthH4vJFzm9OO3pMf0sAAmaneZrBHo4iZoxIux
 
