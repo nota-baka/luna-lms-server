@@ -3,6 +3,8 @@ package helpers
 import (
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 
 	"Luna.LMS/luna-server/config"
@@ -59,4 +61,26 @@ func DecryptString(encText []byte) (string, error) {
 		return "", err
 	}
 	return string(decrypted), nil
+}
+
+// GenerateToken generates 32 bytes long random token
+func GenerateToken() ([]byte, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return nil, err
+	}
+	return b, nil
+
+}
+
+// HashToken generates hash from token using SHA-256
+func HashToken(token []byte) []byte {
+	sum := sha256.Sum256(token)
+	return sum[:]
+}
+
+// VerifyToken compares token with hash
+func VerifyToken(token []byte, hash []byte) bool {
+	sum := HashToken(token)
+	return subtle.ConstantTimeCompare(sum, hash) == 1
 }
