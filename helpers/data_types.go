@@ -1,6 +1,10 @@
 package helpers
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 // AccountRole is user's account role type
 type AccountRole int
@@ -24,10 +28,42 @@ func (a AccountRole) String() string {
 	case RoleModerator:
 		return "Moderator"
 	case RoleCourseManager:
-		return "CourseManager"
+		return "Course_Manager"
 	case RoleStudent:
 		return "Student"
 	default:
 		return fmt.Sprintf("AccountRole(%d)", int(a))
 	}
+}
+
+// FromString returns AccountRole value extracted from string
+func (AccountRole) FromString(s string) AccountRole {
+	switch strings.ToUpper(s) {
+	case "ADMINISTRATOR":
+		return RoleAdministrator
+	case "MODERATOR":
+		return RoleModerator
+	case "COURSE_MANAGER":
+		return RoleCourseManager
+	case "STUDENT":
+		return RoleStudent
+	default:
+		return RoleUnknown
+	}
+}
+
+type Account struct {
+	Id           string
+	Role         AccountRole
+	Name         string
+	EmailAddress string
+	PasswordHash string
+}
+
+type Device struct {
+	Id           string
+	AccountId    string
+	LastOnlineAt time.Time
+	Token        []byte
+	ExpireAt     time.Time
 }
