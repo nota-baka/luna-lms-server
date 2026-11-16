@@ -9,6 +9,7 @@ import (
 	apiv1 "Luna.LMS/luna-server/api/v1"
 	"Luna.LMS/luna-server/config"
 	dbquerier "Luna.LMS/luna-server/db_querier"
+	"Luna.LMS/luna-server/helpers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,9 +20,15 @@ func main() {
 		return
 	}
 
+	// Initialise cryptographic functionality
+	err = helpers.InitCrypto()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	// Initialise database instance
 	err = dbquerier.Init()
-
 	if err != nil {
 		log.Println(err)
 		return
@@ -51,6 +58,7 @@ func main() {
 	}(server)
 }
 
+// initServer prepares HTTP server instance and returns it
 func initServer() *http.Server {
 	// Create Gin engine instance
 	g := gin.Default()
