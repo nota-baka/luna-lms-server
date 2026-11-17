@@ -79,4 +79,5 @@ func initServer() *http.Server {
 // bindHandlers binds all API paths to their respective handlers
 func bindHandlers(g *gin.Engine) {
 	g.GET("/v1/srv/ping", apiv1.Ping)
+	g.POST("/v1/auth/login/init", apiv1.AuthLoginHandler)
 }
