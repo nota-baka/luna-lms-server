@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/base64"
 	"errors"
 
 	"Luna.LMS/luna-server/config"
@@ -17,7 +18,11 @@ var aead cipher.AEAD
 func InitCrypto() error {
 	if aead == nil {
 		var err error
-		aead, err = chacha20poly1305.NewX(config.GlobalConfig.Encryption.Key)
+		encKey, err := base64.StdEncoding.DecodeString(config.GlobalConfig.Encryption.Key)
+		if err != nil {
+			return err
+		}
+		aead, err = chacha20poly1305.NewX(encKey)
 		if err != nil {
 			return err
 		}
