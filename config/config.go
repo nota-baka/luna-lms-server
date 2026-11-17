@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/hex"
 	"errors"
 	"log"
 	"os"
@@ -27,7 +26,7 @@ type Config struct {
 	}
 
 	Encryption struct {
-		Key []byte `toml:"key"`
+		Key string `toml:"key"`
 	}
 }
 
@@ -115,12 +114,7 @@ func initWithEnvVariables() error {
 		}
 	}
 	if encryptionKey := os.Getenv("LUNA_ENCRYPTION_KEY"); encryptionKey != "" {
-		var err error
-		GlobalConfig.Encryption.Key, err = hex.DecodeString(encryptionKey)
-		if err != nil {
-			log.Println("CONFIG: Error decoding encryption key")
-			return err
-		}
+		GlobalConfig.Encryption.Key = encryptionKey
 	}
 	return nil
 }
@@ -153,7 +147,7 @@ func checkConfiguration() error {
 		log.Println("CONFIG: Server port must more than 0 and less than 65535")
 		fail = true
 	}
-	if GlobalConfig.Encryption.Key == nil {
+	if GlobalConfig.Encryption.Key == "" {
 		log.Println("CONFIG: Encryption key is required")
 		fail = true
 	}

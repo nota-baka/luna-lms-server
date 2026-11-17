@@ -64,6 +64,6 @@ type Device struct {
 	Id           string
 	AccountId    string
 	LastOnlineAt time.Time
-	Token        []byte
+	Token        string
 	ExpireAt     time.Time
 }
